@@ -5,6 +5,7 @@ import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
 import SocialMediaMockup from "@/components/common/SocialMediaMockup";
 import Link from "next/link";
+import emailjs from "emailjs-com";
 
 export default function MethodB() {
   const [step, setStep] = useState(1);
@@ -12,6 +13,9 @@ export default function MethodB() {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [email, setEmail] = useState("");
   const [verificationMethod, setVerificationMethod] = useState("governmentId"); // default option
+  const [feedback, setFeedback] = useState("");
+  const [message, setMessage] = useState("");
+  const [feedbackSubmitted, setFeedbackSubmitted] = useState(false); // New state for feedback submission
 
   // Initialize the useForm hook
   const {
@@ -60,6 +64,34 @@ export default function MethodB() {
     } else if (step === 4) {
       setStep(5); // Move to Step 5
     }
+  };
+
+  const handleFeedbackSubmit = (e) => {
+    e.preventDefault();
+
+    const templateParams = {
+      message: feedback,
+    };
+
+    emailjs
+      .send(
+        process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID,
+        process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID_B,
+        templateParams,
+        process.env.NEXT_PUBLIC_EMAILJS_USER_ID,
+      )
+      .then(
+        (response) => {
+          console.log("SUCCESS!", response.status, response.text);
+          setMessage("Thank you for your feedback!");
+          setFeedback("");
+          setFeedbackSubmitted(true);
+        },
+        (err) => {
+          console.log("FAILED...", err);
+          setMessage("Failed to send feedback.");
+        },
+      );
   };
 
   const handleCompleteProfile = () => {
@@ -661,18 +693,6 @@ export default function MethodB() {
               </p>
 
               <p className="mt-2 text-gray-700">
-                We value your feedback! If you have any thoughts or suggestions,
-                please email me at{" "}
-                <a
-                  href="mailto:carloshenrique.webdev@gmail.com"
-                  className="text-blue-500"
-                >
-                  carloshenrique.webdev@gmail.com
-                </a>
-                .
-              </p>
-
-              <p className="mt-2 text-gray-700">
                 Your experience matters to us, and we'd love to hear your
                 thoughts on the registration process. Was the form easy to fill
                 out, or did it feel too long? How likely would you be to drop
@@ -703,6 +723,32 @@ export default function MethodB() {
                   handleCompleteProfile={handleCompleteProfile}
                 />
               </div>
+
+              <p className="mt-4 text-gray-700">
+                <strong>What did you think about Method B?</strong>
+              </p>
+              <form onSubmit={handleFeedbackSubmit} className="mt-4">
+                <textarea
+                  value={feedback}
+                  onChange={(e) => setFeedback(e.target.value)}
+                  placeholder="Enter your feedback here"
+                  className="mt-1 block w-full p-2 border rounded bg-gray-100"
+                  required
+                />
+                <button
+                  type="submit"
+                  className={`bg-blue-500 text-white rounded-lg px-4 py-2 w-full mt-4 ${
+                    feedbackSubmitted ? "opacity-50 cursor-not-allowed" : ""
+                  }`}
+                  disabled={feedbackSubmitted} // Disable the button if feedback is submitted
+                >
+                  Send Feedback
+                </button>
+              </form>
+              {message && (
+                <p className="text-green-500 text-sm mt-2">{message}</p>
+              )}
+
               <div className="mt-10">
                 <div className="flex space-x-4">
                   <Link href="/" className="underline text-blue-600">
